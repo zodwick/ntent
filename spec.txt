@@ -1,0 +1,15 @@
+im tryna create a smart agentic screenshot app for android.
+idea is that when i take a screenshot i need to send this iage to an LLM with custom context
+then the llm suggests a few custom actions
+we need to then take these actions. These can be:
+1. screenshot of a food bill -> adds it to correct organised folder 
+2. i take screenshot of an event in instagram - the app suggests adding this to calender -> adds it in one clik
+3. chrome tech article  -> send this article in whatsapp to 3 friends (could be hardcoded for now)
+4. i take screenshot of a film in google -> suggests adding to watchlist in letterboxd -> adds it
+
+
+we can be super hacky with everything. we are gona 
+
+
+all these actions should happen fully aurtomatically in the backround. the user should be able to click on the suggested action and continue using
+not having to worry about anything or clicking anything. do it all yolo style for impressive demo

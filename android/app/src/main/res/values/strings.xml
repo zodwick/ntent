@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ScrnStr</string>
+    <string name="start_monitoring">Start Monitoring</string>
+    <string name="stop_monitoring">Stop Monitoring</string>
+    <string name="status_idle">Status: Idle</string>
+    <string name="status_monitoring">Status: Monitoring screenshots...</string>
+</resources>

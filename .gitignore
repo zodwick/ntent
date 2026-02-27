@@ -1,0 +1,22 @@
+# Android
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+*.apk
+*.aab
+
+# Server
+server/node_modules/
+server/.env
+server/.wwebjs_auth/
+server/ltrbxd_cookie.txt
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
