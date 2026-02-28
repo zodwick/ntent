@@ -2,6 +2,7 @@ package com.scrnstr
 
 import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import com.google.gson.JsonObject
 import com.scrnstr.actions.BillOrganizer
 import com.scrnstr.actions.CalendarAdder
@@ -18,7 +19,13 @@ object ActionExecutor {
 
     suspend fun execute(context: Context, category: String, data: JsonObject, screenshotUri: Uri) {
         when (category) {
-            "food_bill" -> BillOrganizer.organize(context, screenshotUri)
+            "food_bill" -> {
+                if (screenshotUri == Uri.EMPTY) {
+                    Toast.makeText(context, "Bill organizer requires a screenshot", Toast.LENGTH_SHORT).show()
+                } else {
+                    BillOrganizer.organize(context, screenshotUri)
+                }
+            }
             "event" -> CalendarAdder.addEvent(context, data)
             "tech_article" -> WhatsAppAction.share(context, data)
             "movie" -> LetterboxdAction.addToWatchlist(context, data)

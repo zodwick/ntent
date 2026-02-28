@@ -21,7 +21,7 @@ class GeminiClassifier(private val context: Context) {
 
     companion object {
         private const val TAG = "GeminiClassifier"
-        private const val PROMPT = """Analyze this screenshot and classify it into one of these categories:
+        private const val CLASSIFICATION_SCHEMA = """
 - food_bill: A restaurant bill or food receipt. Extract: { "total": "amount", "restaurant": "name", "date": "date" }
 - event: An event poster, ticket, or invitation. Extract: { "title": "event name", "date": "date", "time": "time", "location": "venue" }
 - tech_article: A tech article, blog post, or news. Extract: { "title": "article title", "summary": "brief summary", "url_if_visible": "url or empty" }
@@ -36,6 +36,9 @@ class GeminiClassifier(private val context: Context) {
 
 Respond ONLY with valid JSON in this exact format:
 { "category": "category_name", "data": { ... }, "suggested_action": "brief description of action" }"""
+
+        private const val PROMPT = "Analyze this screenshot and classify it into one of these categories:$CLASSIFICATION_SCHEMA"
+        private const val TEXT_PROMPT = "Classify this text into one of these categories:$CLASSIFICATION_SCHEMA"
     }
 
     private val gson = Gson()
@@ -75,6 +78,35 @@ Respond ONLY with valid JSON in this exact format:
             )
         } catch (e: Exception) {
             Log.e(TAG, "Classification error", e)
+            null
+        }
+    }
+
+    suspend fun classifyText(input: String): ClassificationResult? = withContext(Dispatchers.IO) {
+        try {
+            val response = model.generateContent(
+                content {
+                    text("$TEXT_PROMPT\n\nText: $input")
+                }
+            )
+
+            val text = response.text ?: return@withContext null
+            Log.d(TAG, "Gemini text response: $text")
+
+            val cleaned = text.trim()
+                .removePrefix("```json")
+                .removePrefix("```")
+                .removeSuffix("```")
+                .trim()
+
+            val json = gson.fromJson(cleaned, JsonObject::class.java)
+            ClassificationResult(
+                category = json.get("category").asString,
+                data = json.getAsJsonObject("data") ?: JsonObject(),
+                suggestedAction = json.get("suggested_action")?.asString ?: ""
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Text classification error", e)
             null
         }
     }

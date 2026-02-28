@@ -2,6 +2,7 @@ package com.scrnstr
 
 import android.Manifest
 import android.animation.ObjectAnimator
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.AnimatedVectorDrawable
@@ -14,6 +15,9 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AnimationUtils
 import android.view.animation.LinearInterpolator
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -21,11 +25,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.JsonObject
 import com.scrnstr.data.InterceptHistory
+import com.scrnstr.data.InterceptRecord
 import com.scrnstr.ui.RecentInterceptAdapter
 import com.scrnstr.ui.TerminalTextView
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,6 +52,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dotNotify: View
     private lateinit var dotOverlay: View
 
+    // Quick action views
+    private lateinit var quickActionInput: EditText
+    private lateinit var quickActionResultCard: View
+    private lateinit var quickActionAccentBar: View
+    private lateinit var quickActionResultTitle: TextView
+    private lateinit var quickActionResultSubtitle: TextView
+    private lateinit var quickActionButton: TextView
+
+    private lateinit var classifier: GeminiClassifier
     private lateinit var interceptHistory: InterceptHistory
     private lateinit var adapter: RecentInterceptAdapter
     private var isMonitoring = false
@@ -61,10 +78,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         interceptHistory = InterceptHistory(this)
+        classifier = GeminiClassifier(this)
         bindViews()
         setupCategoryCards()
         setupRecyclerView()
         setupToggleButton()
+        setupTextInput()
         setupScanlineAnimation()
         updatePermissionDots()
         applyIdleState()
@@ -100,6 +119,13 @@ class MainActivity : AppCompatActivity() {
         dotCalendar = findViewById(R.id.dotCalendar)
         dotNotify = findViewById(R.id.dotNotify)
         dotOverlay = findViewById(R.id.dotOverlay)
+
+        quickActionInput = findViewById(R.id.quickActionInput)
+        quickActionResultCard = findViewById(R.id.quickActionResultCard)
+        quickActionAccentBar = findViewById(R.id.quickActionAccentBar)
+        quickActionResultTitle = findViewById(R.id.quickActionResultTitle)
+        quickActionResultSubtitle = findViewById(R.id.quickActionResultSubtitle)
+        quickActionButton = findViewById(R.id.quickActionButton)
     }
 
     private fun setupCategoryCards() {
@@ -365,6 +391,150 @@ class MainActivity : AppCompatActivity() {
         // MotionLayout transition to idle
         motionLayout.transitionToStart()
         applyIdleState()
+    }
+
+    private fun setupTextInput() {
+        quickActionInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                val input = quickActionInput.text.toString().trim()
+                if (input.isNotEmpty()) {
+                    runTextClassification(input)
+                }
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun runTextClassification(input: String) {
+        // Hide keyboard
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(quickActionInput.windowToken, 0)
+
+        // Loading state
+        quickActionInput.isEnabled = false
+        quickActionInput.hint = "analyzing..."
+        quickActionResultCard.visibility = View.GONE
+
+        lifecycleScope.launch {
+            val result = classifier.classifyText(input)
+            if (result != null) {
+                val (title, subtitle, actionLabel, accentColor) = getDisplayInfo(result.category, result.data)
+
+                quickActionResultCard.visibility = View.VISIBLE
+                quickActionResultTitle.text = title
+                quickActionResultSubtitle.text = subtitle
+                quickActionButton.text = actionLabel
+                quickActionAccentBar.setBackgroundColor(accentColor)
+
+                quickActionButton.setOnClickListener {
+                    lifecycleScope.launch {
+                        try {
+                            ActionExecutor.execute(this@MainActivity, result.category, result.data, Uri.EMPTY)
+                        } catch (e: Exception) {
+                            Toast.makeText(this@MainActivity, "Action failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+
+                // Log to intercept history
+                interceptHistory.addIntercept(
+                    InterceptRecord(
+                        category = result.category,
+                        title = title,
+                        thumbnailUri = "",
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+                refreshInterceptFeed()
+                updateCategoryDots()
+            } else {
+                Toast.makeText(this@MainActivity, "Could not classify text", Toast.LENGTH_SHORT).show()
+            }
+
+            // Re-enable input
+            quickActionInput.isEnabled = true
+            quickActionInput.hint = "type anything... movie, event, reminder"
+        }
+    }
+
+    private data class DisplayInfo(
+        val title: String,
+        val subtitle: String,
+        val actionLabel: String,
+        val accentColor: Int
+    )
+
+    private fun getDisplayInfo(category: String, data: JsonObject): DisplayInfo {
+        return when (category) {
+            "food_bill" -> DisplayInfo(
+                title = "FOOD BILL: ${data.get("total")?.asString ?: "?"}",
+                subtitle = data.get("restaurant")?.asString ?: "Unknown",
+                actionLabel = "ORGANIZE →",
+                accentColor = 0xFF00FF41.toInt()
+            )
+            "event" -> DisplayInfo(
+                title = "EVENT: ${data.get("title")?.asString ?: "Event"}",
+                subtitle = data.get("date")?.asString ?: "",
+                actionLabel = "ADD TO CALENDAR →",
+                accentColor = 0xFF00FF41.toInt()
+            )
+            "tech_article" -> DisplayInfo(
+                title = "TECH ARTICLE",
+                subtitle = data.get("title")?.asString ?: "Article",
+                actionLabel = "SHARE →",
+                accentColor = 0xFFFFB000.toInt()
+            )
+            "movie" -> DisplayInfo(
+                title = "MOVIE: ${data.get("title")?.asString ?: "Movie"}",
+                subtitle = "Add to Letterboxd watchlist",
+                actionLabel = "ADD TO WATCHLIST →",
+                accentColor = 0xFFFFB000.toInt()
+            )
+            "coupon_code" -> DisplayInfo(
+                title = "COUPON: ${data.get("code")?.asString ?: "Code"}",
+                subtitle = data.get("platform")?.asString ?: "",
+                actionLabel = "COPY →",
+                accentColor = 0xFFFF4081.toInt()
+            )
+            "contact" -> DisplayInfo(
+                title = "CONTACT: ${data.get("name")?.asString ?: "Contact"}",
+                subtitle = data.get("company")?.asString ?: "",
+                actionLabel = "SAVE →",
+                accentColor = 0xFF448AFF.toInt()
+            )
+            "wifi_password" -> DisplayInfo(
+                title = "WIFI: ${data.get("ssid")?.asString ?: "Network"}",
+                subtitle = "Tap to connect",
+                actionLabel = "CONNECT →",
+                accentColor = 0xFF448AFF.toInt()
+            )
+            "address" -> DisplayInfo(
+                title = "ADDRESS: ${data.get("place_name")?.asString ?: "Location"}",
+                subtitle = data.get("city")?.asString ?: "",
+                actionLabel = "OPEN IN MAPS →",
+                accentColor = 0xFFFF6D00.toInt()
+            )
+            "reminder" -> DisplayInfo(
+                title = "REMINDER: ${data.get("title")?.asString ?: "Reminder"}",
+                subtitle = data.get("time")?.asString ?: "",
+                actionLabel = "SET ALARM →",
+                accentColor = 0xFFE040FB.toInt()
+            )
+            "travel" -> DisplayInfo(
+                title = "TRAVEL: ${data.get("title")?.asString ?: "Trip"}",
+                subtitle = data.get("date")?.asString ?: "",
+                actionLabel = "ADD TO CALENDAR →",
+                accentColor = 0xFF00FF41.toInt()
+            )
+            else -> DisplayInfo(
+                title = "ANALYZED",
+                subtitle = category,
+                actionLabel = "DISMISS →",
+                accentColor = 0xFF00FF41.toInt()
+            )
+        }
     }
 
     override fun onDestroy() {

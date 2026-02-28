@@ -171,6 +171,94 @@
                     android:layout_height="100dp" />
             </LinearLayout>
 
+            <!-- 4.5 Quick Action Text Input -->
+            <LinearLayout
+                android:id="@+id/quickActionSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:orientation="vertical"
+                android:background="@drawable/bg_overlay_card"
+                android:padding="16dp">
+
+                <TextView
+                    style="@style/TextStyle.SectionHeader"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="QUICK ACTION [+]"
+                    android:layout_marginBottom="12dp" />
+
+                <EditText
+                    android:id="@+id/quickActionInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="120dp"
+                    android:background="@drawable/bg_overlay_card"
+                    android:fontFamily="monospace"
+                    android:gravity="top|start"
+                    android:hint="type anything... movie, event, reminder"
+                    android:textColorHint="@color/terminal_green"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:padding="12dp"
+                    android:inputType="textMultiLine"
+                    android:imeOptions="actionDone"
+                    android:maxLines="6" />
+
+            </LinearLayout>
+
+            <!-- Quick Action Result Card (hidden by default) -->
+            <LinearLayout
+                android:id="@+id/quickActionResultCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_overlay_card"
+                android:orientation="horizontal"
+                android:padding="16dp"
+                android:visibility="gone">
+
+                <View
+                    android:id="@+id/quickActionAccentBar"
+                    android:layout_width="4dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="12dp"
+                    android:background="@color/terminal_green" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/quickActionResultTitle"
+                        style="@style/TextStyle.Title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/quickActionResultSubtitle"
+                        style="@style/TextStyle.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp" />
+
+                    <TextView
+                        android:id="@+id/quickActionButton"
+                        style="@style/ToggleButton.Idle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center"
+                        android:paddingHorizontal="24dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
             <!-- 5. Recent Activity Feed -->
             <TextView
                 android:id="@+id/recentHeader"
