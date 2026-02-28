@@ -14,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class ScreenshotObserverService : Service() {
@@ -92,17 +93,47 @@ class ScreenshotObserverService : Service() {
     private fun processScreenshot(uri: Uri) {
         serviceScope.launch {
             try {
+                // Wait for the screenshot file to be finalized (no longer .pending)
+                delay(3000)
+
+                // Re-query for the latest screenshot since the original URI may be a pending item
+                val finalUri = getLatestScreenshotUri() ?: uri
+                Log.d(TAG, "Processing screenshot URI: $finalUri")
+
                 notificationHelper.showAnalyzing()
 
-                val result = classifier.classify(uri)
+                val result = classifier.classify(finalUri)
                 if (result != null) {
-                    notificationHelper.showResult(result.category, result.data, uri)
+                    notificationHelper.showResult(result.category, result.data, finalUri)
                 } else {
                     Log.w(TAG, "Classification returned null")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing screenshot", e)
             }
+        }
+    }
+
+    private fun getLatestScreenshotUri(): Uri? {
+        val projection = arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA)
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        return try {
+            contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection, null, null, sortOrder
+            )?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val path = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA))
+                    if (path.contains("Screenshot", ignoreCase = true) && !path.contains(".pending")) {
+                        val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                        return@use Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toString())
+                    }
+                }
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error querying latest screenshot", e)
+            null
         }
     }
 

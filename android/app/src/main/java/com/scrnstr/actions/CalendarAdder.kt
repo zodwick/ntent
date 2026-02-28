@@ -75,7 +75,9 @@ object CalendarAdder {
     private fun parseDateTime(dateStr: String, timeStr: String): Long {
         val formats = listOf(
             "yyyy-MM-dd HH:mm", "MM/dd/yyyy HH:mm", "dd MMM yyyy HH:mm",
-            "yyyy-MM-dd", "MM/dd/yyyy", "dd MMM yyyy"
+            "EEE dd MMM yyyy hh:mm a", "EEE dd MMM yyyy HH:mm",
+            "dd MMM yyyy hh:mm a", "MMM dd, yyyy hh:mm a",
+            "yyyy-MM-dd", "MM/dd/yyyy", "dd MMM yyyy", "EEE dd MMM yyyy"
         )
         val combined = "$dateStr $timeStr".trim()
         for (format in formats) {

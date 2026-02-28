@@ -1,3 +1,6 @@
+// WhatsApp messaging via whatsapp-web.js (headless Puppeteer).
+// First run: scan QR in terminal. Session persists in .wwebjs_auth/.
+// See WHATSAPP.md for setup & troubleshooting.
 const { Client, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
 

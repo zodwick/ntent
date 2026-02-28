@@ -39,13 +39,8 @@ async function gotoWithCF(page, url) {
 async function login() {
   try {
     browser = await puppeteer.launch({
-      headless: false, // non-headless to pass Cloudflare
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--window-size=1280,800",
-        "--window-position=-2000,-2000", // offscreen so it doesn't bother user
-      ],
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     // Load cookies from file
