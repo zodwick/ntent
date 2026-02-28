@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/radar_sweep_base">
+    <target
+        android:name="sweep_arm"
+        android:animation="@animator/rotate_360" />
+</animated-vector>

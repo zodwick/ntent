@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base styles for dot-notation inheritance -->
+    <style name="TextStyle" />
+    <style name="ToggleButton" />
+
+    <!-- Text Styles -->
+    <style name="TextStyle.Title">
+        <item name="android:fontFamily">@font/chakra_petch_semibold</item>
+        <item name="android:textSize">@dimen/text_title</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">0.15</item>
+    </style>
+
+    <style name="TextStyle.Status">
+        <item name="android:fontFamily">@font/jetbrains_mono_medium</item>
+        <item name="android:textSize">@dimen/text_status</item>
+        <item name="android:textColor">@color/text_muted</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <style name="TextStyle.StatusActive">
+        <item name="android:fontFamily">@font/jetbrains_mono_medium</item>
+        <item name="android:textSize">@dimen/text_status</item>
+        <item name="android:textColor">@color/terminal_green</item>
+        <item name="android:letterSpacing">0.1</item>
+    </style>
+
+    <style name="TextStyle.Body">
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextStyle.Label">
+        <item name="android:fontFamily">@font/jetbrains_mono_medium</item>
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.2</item>
+    </style>
+
+    <style name="TextStyle.Caption">
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textSize">@dimen/text_caption</item>
+        <item name="android:textColor">@color/text_muted</item>
+    </style>
+
+    <style name="TextStyle.CategoryLabel">
+        <item name="android:fontFamily">@font/chakra_petch_medium</item>
+        <item name="android:textSize">@dimen/text_label</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.15</item>
+    </style>
+
+    <style name="TextStyle.Version">
+        <item name="android:fontFamily">@font/jetbrains_mono_regular</item>
+        <item name="android:textSize">@dimen/text_caption</item>
+        <item name="android:textColor">@color/text_muted</item>
+    </style>
+
+    <style name="TextStyle.SectionHeader">
+        <item name="android:fontFamily">@font/jetbrains_mono_medium</item>
+        <item name="android:textSize">@dimen/text_caption</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:letterSpacing">0.2</item>
+    </style>
+
+    <!-- Button Styles -->
+    <style name="ToggleButton.Idle">
+        <item name="android:background">@drawable/bg_toggle_idle</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:fontFamily">@font/chakra_petch_semibold</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:letterSpacing">0.2</item>
+    </style>
+
+    <style name="ToggleButton.Active">
+        <item name="android:background">@drawable/bg_toggle_active</item>
+        <item name="android:textColor">@color/surface_black</item>
+        <item name="android:fontFamily">@font/chakra_petch_semibold</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:letterSpacing">0.2</item>
+    </style>
+</resources>

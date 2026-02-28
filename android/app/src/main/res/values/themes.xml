@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Scrnstr" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_variant</item>
-        <item name="colorSecondary">@color/secondary</item>
+    <style name="Theme.Scrnstr" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/terminal_green</item>
+        <item name="colorPrimaryVariant">@color/terminal_green_dim</item>
+        <item name="colorSecondary">@color/terminal_green</item>
+        <item name="android:colorBackground">@color/surface_black</item>
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnPrimary">@color/surface_black</item>
+        <item name="colorOnSecondary">@color/surface_black</item>
+        <item name="colorOnBackground">@color/text_primary</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:statusBarColor">@color/surface_black</item>
+        <item name="android:navigationBarColor">@color/surface_black</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

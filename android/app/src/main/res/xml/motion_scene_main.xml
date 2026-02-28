@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:motion="http://schemas.android.com/apk/res-auto">
+
+    <!-- Idle state (start) -->
+    <ConstraintSet android:id="@+id/idle_state">
+        <Constraint android:id="@+id/glowBackground">
+            <PropertySet android:alpha="0" />
+        </Constraint>
+        <Constraint android:id="@+id/statusCircle">
+            <PropertySet android:alpha="0.5" />
+        </Constraint>
+        <Constraint android:id="@+id/idleCursorIcon">
+            <PropertySet android:visibility="visible" android:alpha="0.5" />
+        </Constraint>
+        <Constraint android:id="@+id/radarSweep">
+            <PropertySet android:visibility="gone" android:alpha="0" />
+        </Constraint>
+    </ConstraintSet>
+
+    <!-- Active state (end) -->
+    <ConstraintSet android:id="@+id/active_state">
+        <Constraint android:id="@+id/glowBackground">
+            <PropertySet android:alpha="0.6" />
+        </Constraint>
+        <Constraint android:id="@+id/statusCircle">
+            <PropertySet android:alpha="1.0" />
+        </Constraint>
+        <Constraint android:id="@+id/idleCursorIcon">
+            <PropertySet android:visibility="gone" android:alpha="0" />
+        </Constraint>
+        <Constraint android:id="@+id/radarSweep">
+            <PropertySet android:visibility="visible" android:alpha="1.0" />
+        </Constraint>
+    </ConstraintSet>
+
+    <!-- Transition: idle -> active -->
+    <Transition
+        motion:constraintSetStart="@id/idle_state"
+        motion:constraintSetEnd="@id/active_state"
+        motion:duration="400">
+
+        <KeyFrameSet>
+            <KeyAttribute
+                motion:motionTarget="@id/glowBackground"
+                motion:framePosition="50"
+                android:alpha="0.8" />
+        </KeyFrameSet>
+    </Transition>
+
+</MotionScene>

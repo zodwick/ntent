@@ -39,9 +39,10 @@ class ScreenshotObserverService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notification = NotificationCompat.Builder(this, Config.NOTIFICATION_CHANNEL_ID)
-            .setContentTitle("ScrnStr")
+            .setContentTitle("SCRNSTR")
             .setContentText("Monitoring screenshots...")
-            .setSmallIcon(android.R.drawable.ic_menu_camera)
+            .setSmallIcon(R.drawable.ic_notif_scrnstr)
+            .setColor(0xFF00FF41.toInt())
             .setOngoing(true)
             .build()
 
@@ -93,10 +94,8 @@ class ScreenshotObserverService : Service() {
     private fun processScreenshot(uri: Uri) {
         serviceScope.launch {
             try {
-                // Wait for the screenshot file to be finalized (no longer .pending)
                 delay(3000)
 
-                // Re-query for the latest screenshot since the original URI may be a pending item
                 val finalUri = getLatestScreenshotUri() ?: uri
                 Log.d(TAG, "Processing screenshot URI: $finalUri")
 

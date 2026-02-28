@@ -1,23 +1,281 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.motion.widget.MotionLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/motionLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="32dp">
+    android:background="@color/surface_black"
+    app:layoutDescription="@xml/motion_scene_main">
 
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/status_idle"
-        android:textSize="18sp"
-        android:layout_marginBottom="24dp" />
+    <!-- Background grid overlay -->
+    <View
+        android:id="@+id/gridOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_grid_pattern"
+        android:alpha="0.15"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/toggleButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/start_monitoring" />
+    <!-- Scanline effect -->
+    <View
+        android:id="@+id/scanline"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/scanline_overlay"
+        app:layout_constraintTop_toTopOf="parent" />
 
-</LinearLayout>
+    <!-- ScrollView for content -->
+    <ScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="48dp"
+            android:paddingBottom="24dp">
+
+            <!-- 1. Top Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/appTitle"
+                    style="@style/TextStyle.Title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/app_name"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:id="@+id/appVersion"
+                    style="@style/TextStyle.Version"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/app_version" />
+            </LinearLayout>
+
+            <!-- 2. Hero Status Circle -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:layout_gravity="center">
+
+                <!-- Radial glow (visible when active) -->
+                <View
+                    android:id="@+id/glowBackground"
+                    android:layout_width="240dp"
+                    android:layout_height="240dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_glow_radial"
+                    android:alpha="0" />
+
+                <!-- Status circle border -->
+                <View
+                    android:id="@+id/statusCircle"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_status_circle_idle" />
+
+                <!-- Idle: terminal cursor icon -->
+                <ImageView
+                    android:id="@+id/idleCursorIcon"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_terminal_cursor"
+                    android:alpha="0.5" />
+
+                <!-- Active: radar sweep -->
+                <ImageView
+                    android:id="@+id/radarSweep"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/avd_radar_sweep"
+                    android:visibility="gone" />
+            </FrameLayout>
+
+            <!-- Status label -->
+            <com.scrnstr.ui.TerminalTextView
+                android:id="@+id/statusText"
+                style="@style/TextStyle.Status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:text="@string/status_dormant" />
+
+            <!-- 3. Power Toggle -->
+            <TextView
+                android:id="@+id/toggleButton"
+                style="@style/ToggleButton.Idle"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="24dp"
+                android:gravity="center"
+                android:text="@string/toggle_activate"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- 4. Category Cards Row -->
+            <LinearLayout
+                android:id="@+id/categoryRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <include
+                    android:id="@+id/cardBills"
+                    layout="@layout/item_category_card"
+                    android:layout_width="80dp"
+                    android:layout_height="100dp"
+                    android:layout_marginEnd="8dp" />
+
+                <include
+                    android:id="@+id/cardEvents"
+                    layout="@layout/item_category_card"
+                    android:layout_width="80dp"
+                    android:layout_height="100dp"
+                    android:layout_marginEnd="8dp" />
+
+                <include
+                    android:id="@+id/cardArticles"
+                    layout="@layout/item_category_card"
+                    android:layout_width="80dp"
+                    android:layout_height="100dp"
+                    android:layout_marginEnd="8dp" />
+
+                <include
+                    android:id="@+id/cardFilms"
+                    layout="@layout/item_category_card"
+                    android:layout_width="80dp"
+                    android:layout_height="100dp" />
+            </LinearLayout>
+
+            <!-- 5. Recent Activity Feed -->
+            <TextView
+                android:id="@+id/recentHeader"
+                style="@style/TextStyle.SectionHeader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="@string/recent_intercepts" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"
+                android:background="@color/text_muted" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recentRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:nestedScrollingEnabled="false" />
+
+            <TextView
+                android:id="@+id/noInterceptsText"
+                style="@style/TextStyle.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="16dp"
+                android:text="@string/no_intercepts"
+                android:visibility="visible" />
+
+            <!-- 6. Permission Status Strip -->
+            <LinearLayout
+                android:id="@+id/permissionStrip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginEnd="24dp">
+
+                    <View
+                        android:id="@+id/dotStorage"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@drawable/bg_status_circle_idle" />
+
+                    <TextView
+                        style="@style/TextStyle.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/permission_storage" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:layout_marginEnd="24dp">
+
+                    <View
+                        android:id="@+id/dotCalendar"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@drawable/bg_status_circle_idle" />
+
+                    <TextView
+                        style="@style/TextStyle.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/permission_calendar" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:id="@+id/dotNotify"
+                        android:layout_width="8dp"
+                        android:layout_height="8dp"
+                        android:background="@drawable/bg_status_circle_idle" />
+
+                    <TextView
+                        style="@style/TextStyle.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/permission_notify" />
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.motion.widget.MotionLayout>

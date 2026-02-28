@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Calendar body -->
+    <path
+        android:fillColor="#00FF41"
+        android:pathData="M5,4h14c0.55,0 1,0.45 1,1v14c0,0.55 -0.45,1 -1,1H5c-0.55,0 -1,-0.45 -1,-1V5c0,-0.55 0.45,-1 1,-1z" />
+    <!-- Top tabs -->
+    <path
+        android:fillColor="#00FF41"
+        android:pathData="M8,2h1.5v3H8zM14.5,2H16v3h-1.5z" />
+    <!-- Header bar -->
+    <path
+        android:fillColor="#0A0A0A"
+        android:pathData="M4,7h16v1.5H4z" />
+    <!-- Grid dots -->
+    <path
+        android:fillColor="#0A0A0A"
+        android:pathData="M7,10.5h2v2H7zM11,10.5h2v2h-2zM15,10.5h2v2h-2zM7,14.5h2v2H7zM11,14.5h2v2h-2z" />
+</vector>
