@@ -131,6 +131,17 @@ curl -X POST http://localhost:3000/whatsapp \
 | Overlay not dismissing on button tap/swipe | `AnimationUtils.loadAnimation()` XML animations don't fire `onAnimationEnd` callbacks on overlay windows. Fix: use `view.animate()` (ViewPropertyAnimator) with `withEndAction` instead |
 | Swipe gesture not working | `OnTouchListener` returning `false` on `ACTION_DOWN` means the view never receives subsequent `MOVE`/`UP` events. Fix: return `true` on `DOWN`, detect drags on `MOVE`, forward taps to button via hit-testing on `UP` |
 
+## Testing Quick Action Text Input
+
+1. Open the app
+2. Scroll to the "QUICK ACTION [+]" section below the category cards
+3. Type something like `Interstellar 2014` or `meeting with John tomorrow 3pm`
+4. Tap Done on the keyboard
+5. Wait ~2-3s for Gemini to classify
+6. Result card appears with category title + action button
+7. Tap the action button to execute (e.g. "ADD TO WATCHLIST →" for movies)
+8. Check that the recent intercepts feed updates
+
 ## Testing Flow (the fast iteration loop)
 
 1. Make code changes
@@ -148,32 +159,48 @@ Total cycle time: **~15 seconds** from code change to seeing results. No Android
 ## Architecture Quick Reference
 
 ```
-Screenshot taken → ContentObserver detects it
-    → 3s delay (wait for .pending to finalize)
-    → Re-query MediaStore for latest screenshot
-    → GeminiClassifier (Gemini 2.0 Flash)
-    → Returns {category, data, suggested_action}
-    → If overlay permission granted:
-        → OverlayManager.showLoading() (floating card)
-        → OverlayManager.showResult() (floating card with action button)
-        → User taps action button → ActionExecutor (direct call)
-        → Swipe/tap/auto-dismiss (10s) removes overlay
-    → If no overlay permission (fallback):
-        → Notification shown
-        → User taps → ActionReceiver → ActionExecutor
-    → Actions:
-        → food_bill  → BillOrganizer (local file copy)
+Path 1: Screenshot Detection
+    Screenshot taken → ContentObserver detects it
+        → 3s delay (wait for .pending to finalize)
+        → Re-query MediaStore for latest screenshot
+        → GeminiClassifier.classify(imageUri) (Gemini 2.0 Flash)
+        → Returns {category, data, suggested_action}
+        → If overlay permission granted:
+            → OverlayManager.showLoading() (floating card)
+            → OverlayManager.showResult() (floating card with action button)
+            → User taps action button → ActionExecutor (direct call)
+            → Swipe/tap/auto-dismiss (10s) removes overlay
+        → If no overlay permission (fallback):
+            → Notification shown
+            → User taps → ActionReceiver → ActionExecutor
+
+Path 2: Quick Action Text Input (no screenshot needed)
+    User types text in MainActivity → hits Done/Enter
+        → GeminiClassifier.classifyText(input) (Gemini 2.0 Flash, text-only)
+        → Returns {category, data, suggested_action}
+        → Result card shown inline in the app
+        → User taps action button → ActionExecutor (with Uri.EMPTY)
+        → food_bill gracefully toasts instead of crashing (no image to organize)
+
+    → Actions (both paths):
+        → food_bill  → BillOrganizer (local file copy, screenshot path only)
         → event      → CalendarAdder (device calendar)
         → tech_article → WhatsAppAction (POST to server)
         → movie      → LetterboxdAction (POST to server)
+        → coupon_code → CouponCopier (clipboard)
+        → contact    → ContactSaver (device contacts)
+        → wifi_password → WifiConnector
+        → address    → AddressOpener (Google Maps)
+        → reminder   → ReminderSetter (alarm)
+        → travel     → TravelAdder (calendar)
 ```
 
 ## Key Files
 - `Config.kt` — API keys, server URL, WhatsApp contacts, overlay auto-dismiss timeout
 - `ScreenshotObserverService.kt` — Screenshot detection + processing, delegates to overlay or notification
 - `OverlayManager.kt` — Floating overlay lifecycle (loading → result → dismiss), touch handling
-- `GeminiClassifier.kt` — LLM image classification
-- `ActionExecutor.kt` — Routes actions to handlers
+- `GeminiClassifier.kt` — LLM classification (image via `classify()`, text via `classifyText()`)
+- `ActionExecutor.kt` — Routes actions to handlers (guards `food_bill` against `Uri.EMPTY`)
 - `NotificationHelper.kt` — Notification fallback when overlay permission not granted
 - `actions/` — Individual action implementations
 - `server/index.js` — Express backend
