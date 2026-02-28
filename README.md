@@ -6,6 +6,10 @@ you see something on your screen, you want something done about it. today that m
 
 screenshot it. or type it. the agent figures out your intent and executes it.
 
+<p align="center">
+  <img src="screenshot.jpeg" width="300" alt="ntent detecting a movie screenshot and offering to add it to Letterboxd watchlist" />
+</p>
+
 ##  agent that uses your phone like you do
 
 what we have today is the foundation: intent detection + action execution from any input. where this goes:
