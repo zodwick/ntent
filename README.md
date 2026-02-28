@@ -6,6 +6,19 @@ you see something on your screen, you want something done about it. today that m
 
 screenshot it. or type it. the agent figures out your intent and executes it.
 
+##  agent that uses your phone like you do
+
+what we have today is the foundation: intent detection + action execution from any input. where this goes:
+
+- **bill tracker** — the agent opens whatsapp, scans your messages, finds every unpaid bill, calculates totals, tells you exactly who to pay and how much. perfect for shopkeepers managing daily khata.
+
+- **smart shopping** — want to buy shoes? the agent checks amazon, flipkart, and every shopping app you have installed. compares prices, checks delivery dates for your address, tells you the best deal. no more switching between 5 apps.
+
+- **SMB workflows** — small business owners running everything off their phone. inventory tracking, payment reminders, GST calculations — all through natural language.
+
+the pattern is always the same: you express intent, the agent handles execution across apps.
+
+
 ## how it works
 
 ```
@@ -37,17 +50,6 @@ claude computer use is arguably the greatest productivity boost we've seen this 
 
 ntent brings agentic capability to the phone. not a chatbot. not an assistant you have to babysit. an agent that observes, understands, and acts.
 
-## the vision — an agent that uses your phone like you do
-
-what we have today is the foundation: intent detection + action execution from any input. where this goes:
-
-- **bill tracker** — the agent opens whatsapp, scans your messages, finds every unpaid bill, calculates totals, tells you exactly who to pay and how much. perfect for shopkeepers managing daily khata.
-
-- **smart shopping** — want to buy shoes? the agent checks amazon, flipkart, and every shopping app you have installed. compares prices, checks delivery dates for your address, tells you the best deal. no more switching between 5 apps.
-
-- **SMB workflows** — small business owners running everything off their phone. inventory tracking, payment reminders, GST calculations — all through natural language.
-
-the pattern is always the same: you express intent, the agent handles execution across apps.
 
 ## philosophy
 
