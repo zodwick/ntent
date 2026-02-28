@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.provider.MediaStore
+import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
@@ -28,12 +29,14 @@ class ScreenshotObserverService : Service() {
     private lateinit var contentObserver: ContentObserver
     private lateinit var notificationHelper: NotificationHelper
     private lateinit var classifier: GeminiClassifier
+    private lateinit var overlayManager: OverlayManager
     private var lastProcessedTime = 0L
 
     override fun onCreate() {
         super.onCreate()
         notificationHelper = NotificationHelper(this)
         classifier = GeminiClassifier(this)
+        overlayManager = OverlayManager(this)
         setupContentObserver()
     }
 
@@ -91,6 +94,9 @@ class ScreenshotObserverService : Service() {
         }
     }
 
+    private val useOverlay: Boolean
+        get() = overlayManager.canShowOverlay()
+
     private fun processScreenshot(uri: Uri) {
         serviceScope.launch {
             try {
@@ -99,16 +105,30 @@ class ScreenshotObserverService : Service() {
                 val finalUri = getLatestScreenshotUri() ?: uri
                 Log.d(TAG, "Processing screenshot URI: $finalUri")
 
-                notificationHelper.showAnalyzing()
+                if (useOverlay) {
+                    overlayManager.showLoading()
+                } else {
+                    notificationHelper.showAnalyzing()
+                }
 
                 val result = classifier.classify(finalUri)
                 if (result != null) {
-                    notificationHelper.showResult(result.category, result.data, finalUri)
+                    if (useOverlay) {
+                        val cat = result.category
+                        val data = result.data
+                        overlayManager.showResult(cat, data, finalUri) {
+                            ActionExecutor.execute(this@ScreenshotObserverService, cat, data, finalUri)
+                        }
+                    } else {
+                        notificationHelper.showResult(result.category, result.data, finalUri)
+                    }
                 } else {
                     Log.w(TAG, "Classification returned null")
+                    if (useOverlay) overlayManager.dismiss()
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error processing screenshot", e)
+                if (useOverlay) overlayManager.dismiss()
             }
         }
     }
@@ -139,6 +159,7 @@ class ScreenshotObserverService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         contentResolver.unregisterContentObserver(contentObserver)
+        overlayManager.cleanup()
         serviceScope.cancel()
         Log.d(TAG, "Screenshot observer stopped")
     }

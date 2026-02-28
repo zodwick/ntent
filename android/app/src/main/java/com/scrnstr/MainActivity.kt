@@ -6,8 +6,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AnimationUtils
@@ -40,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dotStorage: View
     private lateinit var dotCalendar: View
     private lateinit var dotNotify: View
+    private lateinit var dotOverlay: View
 
     private lateinit var interceptHistory: InterceptHistory
     private lateinit var adapter: RecentInterceptAdapter
@@ -48,7 +51,10 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val PERMISSION_REQUEST_CODE = 100
+        private const val OVERLAY_PERMISSION_REQUEST_CODE = 101
     }
+
+    private var pendingStartAfterOverlay = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,6 +75,14 @@ class MainActivity : AppCompatActivity() {
         refreshInterceptFeed()
         updatePermissionDots()
         updateCategoryDots()
+
+        // Check if returning from overlay permission settings
+        if (pendingStartAfterOverlay) {
+            pendingStartAfterOverlay = false
+            if (hasPermissions()) {
+                startMonitoring()
+            }
+        }
     }
 
     private fun bindViews() {
@@ -85,6 +99,7 @@ class MainActivity : AppCompatActivity() {
         dotStorage = findViewById(R.id.dotStorage)
         dotCalendar = findViewById(R.id.dotCalendar)
         dotNotify = findViewById(R.id.dotNotify)
+        dotOverlay = findViewById(R.id.dotOverlay)
     }
 
     private fun setupCategoryCards() {
@@ -161,10 +176,12 @@ class MainActivity : AppCompatActivity() {
             if (isMonitoring) {
                 stopMonitoring()
             } else {
-                if (hasPermissions()) {
-                    startMonitoring()
-                } else {
+                if (!hasPermissions()) {
                     requestPermissions()
+                } else if (!hasOverlayPermission()) {
+                    requestOverlayPermission()
+                } else {
+                    startMonitoring()
                 }
             }
         }
@@ -216,10 +233,15 @@ class MainActivity : AppCompatActivity() {
         statusText.startDotAnimation("SCANNING")
     }
 
+    private fun hasOverlayPermission(): Boolean {
+        return Settings.canDrawOverlays(this)
+    }
+
     private fun updatePermissionDots() {
         updateDot(dotStorage, hasStoragePermission())
         updateDot(dotCalendar, hasCalendarPermission())
         updateDot(dotNotify, hasNotifyPermission())
+        updateDot(dotOverlay, hasOverlayPermission())
     }
 
     private fun updateDot(dot: View, granted: Boolean) {
@@ -287,6 +309,16 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    private fun requestOverlayPermission() {
+        pendingStartAfterOverlay = true
+        val intent = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:$packageName")
+        )
+        startActivity(intent)
+        Toast.makeText(this, "Grant overlay permission to show floating results", Toast.LENGTH_LONG).show()
+    }
+
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<out String>, grantResults: IntArray
     ) {
@@ -294,7 +326,11 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == PERMISSION_REQUEST_CODE) {
             updatePermissionDots()
             if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-                startMonitoring()
+                if (!hasOverlayPermission()) {
+                    requestOverlayPermission()
+                } else {
+                    startMonitoring()
+                }
             } else {
                 Toast.makeText(this, "Permissions required to monitor screenshots", Toast.LENGTH_LONG).show()
             }
