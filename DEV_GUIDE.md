@@ -71,6 +71,13 @@ adb shell pm grant com.scrnstr android.permission.READ_CALENDAR
 adb shell pm grant com.scrnstr android.permission.WRITE_CALENDAR
 ```
 
+> **Note:** `SYSTEM_ALERT_WINDOW` (overlay permission) **cannot** be granted via `adb shell pm grant`.
+> It requires the user to toggle it in system settings. The app launches the settings page automatically,
+> or you can open it manually:
+> ```bash
+> adb shell am start -a android.settings.action.MANAGE_OVERLAY_PERMISSION -d package:com.scrnstr
+> ```
+
 ### Force restart the app
 ```bash
 adb shell am force-stop com.scrnstr
@@ -119,6 +126,10 @@ curl -X POST http://localhost:3000/whatsapp \
 | Gemini API key invalid — trailing `%` in key | Removed `%` from `Config.kt` |
 | Calendar date parsing — `"Fri 17 Apr 2026"` format not supported | Added `EEE dd MMM yyyy` and other formats to `CalendarAdder.kt` |
 | Letterboxd timeout via Cloudflare tunnel | Puppeteer is slow (~15s); tunnel drops connection. Restart tunnel to fix |
+| Overlay immediately removed after being added | `dismiss()` used `handler.post` inside `showLoading()`/`showResult()` which also used `handler.post` — the dismiss queued after the new view was set as `currentView`, removing it. Fix: extract `dismissInternal()` that runs synchronously |
+| Overlay not receiving touch events | `FLAG_NOT_FOCUSABLE` prevents touch input on overlay windows. Fix: use only `FLAG_NOT_TOUCH_MODAL` (passes touches outside overlay through, but overlay itself receives them) |
+| Overlay not dismissing on button tap/swipe | `AnimationUtils.loadAnimation()` XML animations don't fire `onAnimationEnd` callbacks on overlay windows. Fix: use `view.animate()` (ViewPropertyAnimator) with `withEndAction` instead |
+| Swipe gesture not working | `OnTouchListener` returning `false` on `ACTION_DOWN` means the view never receives subsequent `MOVE`/`UP` events. Fix: return `true` on `DOWN`, detect drags on `MOVE`, forward taps to button via hit-testing on `UP` |
 
 ## Testing Flow (the fast iteration loop)
 
@@ -126,10 +137,11 @@ curl -X POST http://localhost:3000/whatsapp \
 2. `./gradlew assembleDebug` (~1-2s incremental)
 3. `adb install -r app/build/outputs/apk/debug/app-debug.apk`
 4. `adb shell am force-stop com.scrnstr && adb shell am start -n com.scrnstr/.MainActivity`
-5. Tap START MONITORING: `adb shell input tap 540 1336`
-6. Take a test screenshot: `adb shell input keyevent 120`
-7. Wait ~8s, check logs: `adb logcat -d --pid=$(adb shell ps -A | grep scrnstr | awk '{print $2}')`
-8. Check notification: `adb shell cmd statusbar expand-notifications`
+5. Tap ACTIVATE: `adb shell input tap 540 1336`
+6. Grant overlay permission if prompted (can't be automated via adb)
+7. Take a test screenshot: `adb shell input keyevent 120`
+8. Wait ~8s, check logs: `adb logcat -d --pid=$(adb shell ps -A | grep scrnstr | awk '{print $2}')`
+9. Overlay should appear (or notification if overlay permission not granted)
 
 Total cycle time: **~15 seconds** from code change to seeing results. No Android Studio UI needed.
 
@@ -141,8 +153,15 @@ Screenshot taken → ContentObserver detects it
     → Re-query MediaStore for latest screenshot
     → GeminiClassifier (Gemini 2.0 Flash)
     → Returns {category, data, suggested_action}
-    → Notification shown
-    → User taps → ActionReceiver → ActionExecutor
+    → If overlay permission granted:
+        → OverlayManager.showLoading() (floating card)
+        → OverlayManager.showResult() (floating card with action button)
+        → User taps action button → ActionExecutor (direct call)
+        → Swipe/tap/auto-dismiss (10s) removes overlay
+    → If no overlay permission (fallback):
+        → Notification shown
+        → User taps → ActionReceiver → ActionExecutor
+    → Actions:
         → food_bill  → BillOrganizer (local file copy)
         → event      → CalendarAdder (device calendar)
         → tech_article → WhatsAppAction (POST to server)
@@ -150,11 +169,23 @@ Screenshot taken → ContentObserver detects it
 ```
 
 ## Key Files
-- `Config.kt` — API keys, server URL, WhatsApp contacts
-- `ScreenshotObserverService.kt` — Screenshot detection + processing
+- `Config.kt` — API keys, server URL, WhatsApp contacts, overlay auto-dismiss timeout
+- `ScreenshotObserverService.kt` — Screenshot detection + processing, delegates to overlay or notification
+- `OverlayManager.kt` — Floating overlay lifecycle (loading → result → dismiss), touch handling
 - `GeminiClassifier.kt` — LLM image classification
 - `ActionExecutor.kt` — Routes actions to handlers
+- `NotificationHelper.kt` — Notification fallback when overlay permission not granted
 - `actions/` — Individual action implementations
 - `server/index.js` — Express backend
 - `server/letterboxd.js` — Puppeteer automation for Letterboxd
 - `server/whatsapp.js` — WhatsApp Web.js integration
+
+## Overlay Gotchas (TYPE_APPLICATION_OVERLAY)
+
+These are hard-won lessons from debugging the floating overlay:
+
+1. **`handler.post` nesting** — If you're already inside a `handler.post` lambda, don't call another method that does `handler.post`. The inner post queues *after* the outer one finishes, causing race conditions. Use synchronous helper methods instead.
+2. **`FLAG_NOT_FOCUSABLE`** — Prevents the overlay from receiving *any* touch events. Use `FLAG_NOT_TOUCH_MODAL` alone to let the overlay receive touches while passing through touches outside its bounds.
+3. **XML View animations don't work on overlay windows** — `AnimationUtils.loadAnimation()` with `AnimationListener.onAnimationEnd` never fires. Use `view.animate()` (ViewPropertyAnimator) with `.withEndAction {}` instead.
+4. **Touch listener `ACTION_DOWN` must return `true`** — Returning `false` on `ACTION_DOWN` means the view will never receive `MOVE` or `UP` events. If you need both swipe and child button clicks, return `true` on `DOWN` and manually hit-test the button location on `UP`.
+5. **`SYSTEM_ALERT_WINDOW` can't be granted via adb** — Unlike runtime permissions, overlay permission requires user interaction through system settings.
