@@ -1,4 +1,7 @@
 # ntent
+claude computer use is arguably the greatest productivity boost we've seen this decade. but most Indians don't have access to a computer — almost every Indian does have a smartphone.
+
+ntent brings agentic capability to the phone. not a chatbot. not an assistant you have to babysit. an agent that observes, understands, and acts.
 
 **an AI agent that acts on your phone — from a screenshot or a sentence.**
 
@@ -47,13 +50,6 @@ there's no "classify then show me options" step. you give it input, it does the 
 | a boarding pass | adds the flight to your calendar |
 
 screenshot and text are interchangeable inputs. the agent doesn't care how it gets the information — it cares about what to do with it.
-
-## why this matters
-
-claude computer use is arguably the greatest productivity boost we've seen this decade. but most Indians don't have access to a computer — almost every Indian does have a smartphone.
-
-ntent brings agentic capability to the phone. not a chatbot. not an assistant you have to babysit. an agent that observes, understands, and acts.
-
 
 ## philosophy
 
