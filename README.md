@@ -1,4 +1,4 @@
-# ntent
+# ntent - Smartphone that your Agents can use
 claude computer use is arguably the greatest productivity boost we've seen this decade. but most Indians don't have access to a computer — almost every Indian does have a smartphone.
 
 ntent brings agentic capability to the phone. not a chatbot. not an assistant you have to babysit. an agent that observes, understands, and acts.
